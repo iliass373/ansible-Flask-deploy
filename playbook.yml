@@ -7,7 +7,7 @@
     - name: ping on the target server
       ping:
 
-    - name: Install Python dependecies
+    - name: Install Python && its dependecies
       apt: name={{ item }} state=present
       with_items:
         - python
@@ -15,3 +15,30 @@
         - python-dev
         - build-essential
         - python-pip
+        - python3-apt
+    
+    - name: Install MySQL 
+      apt: name={{ item }} state=present
+      with_items:
+        - mysql-server
+        - mysql-client
+    
+    - name: Start the Service MySQL
+      service: 
+        name: mysql
+        state: started
+        enabled: yes
+    
+    - name: Create Database
+      mysql_db:
+        name: employee_db
+        state: present
+    
+    - name: Create User
+      mysql_user: 
+        name: db_user
+        password: Passw0rd
+        priv: '*.*:ALL'
+        state: present
+        host: '%'
+       
