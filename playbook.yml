@@ -29,10 +29,19 @@
         state: started
         enabled: yes
     
+    # - name: install pip3
+    #   apt: name=python3-pip  state=present 
+    
+    # - name: Make sure pymysql is present
+    #   pip:
+    #     name: pymysql
+    #     state: present
+
     - name: Create Database
       mysql_db:
         name: employee_db
         state: present
+        #target: /tmp/employee_db.sql
     
     - name: Create User
       mysql_user: 
