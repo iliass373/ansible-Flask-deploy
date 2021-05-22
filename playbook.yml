@@ -2,7 +2,10 @@
 
 -
   name: Deploy a web application
-  hosts: all
+  hosts: target1
+  vars:
+    mysql_root_password: Passw0rd
+    
   tasks:
     - name: ping on the target server
       ping:
@@ -23,25 +26,36 @@
         - mysql-server
         - mysql-client
     
+    - name: start up the mysql service 
+      shell: "service mysql start"
+
     - name: Start the Service MySQL
       service: 
         name: mysql
         state: started
-        enabled: yes
+        enabled: true
     
-    # - name: install pip3
-    #   apt: name=python3-pip  state=present 
+    - name: install pip3
+      apt: name=python3-pip  state=present 
     
-    # - name: Make sure pymysql is present
-    #   pip:
-    #     name: pymysql
-    #     state: present
-
-    - name: Create Database
-      mysql_db:
-        name: employee_db
+    - name: Make sure pymysql is present
+      pip:
+        name: pymysql
         state: present
-        #target: /tmp/employee_db.sql
+
+    - name: Find temporary password
+      shell: "echo `grep 'temporary.*root@localhost' /var/log/mysqld.log | sed 's/.*root@localhost: //'`"
+      register: mysql_root_password_temp
+      tags: register
+    
+    - name: Set new password from temporary password
+      shell: 'mysql -e "SET PASSWORD = PASSWORD(''{{ mysql_root_password }}'');" --connect-expired-password -u root -p"{{ mysql_root_password_temp.stdout }}"'
+  
+        
+    - name: Create Database
+      mysql_db: name=employee_db state=present 
+      # become_user: root
+      # become: yes
     
     - name: Create User
       mysql_user: 
@@ -51,3 +65,11 @@
         state: present
         host: '%'
        
+    - name: Instll Python Flask
+      pip:
+        name: "{{ item }}"
+        state: present 
+      with_items: 
+        - flask
+        - flask-mysql
+    
